@@ -29,7 +29,6 @@ export default function Swipe() {
   const recordSwipe = useRecordSwipe();
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [swipeCount, setSwipeCount] = useState({ known: 0, unknown: 0 });
@@ -59,7 +58,6 @@ export default function Swipe() {
 
     setTimeout(() => {
       x.set(0);
-      setIsFlipped(false);
       setIsAnimating(false);
       setSwipeCount((prev) => ({
         known: status === "known" ? prev.known + 1 : prev.known,
@@ -248,7 +246,6 @@ export default function Swipe() {
               initial={{ scale: 0.92, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 28 }}
-              onClick={() => !isAnimating && setIsFlipped((f) => !f)}
             >
               {/* Known overlay */}
               <motion.div
@@ -270,41 +267,14 @@ export default function Swipe() {
                 </div>
               </motion.div>
 
-              {/* Card inner — flip */}
-              <div className="w-full h-full relative" style={{ transformStyle: "preserve-3d" }}>
-                {/* Front */}
-                <motion.div
-                  className="absolute inset-0 bg-card border border-border shadow-2xl rounded-3xl flex flex-col items-center justify-center p-8 text-center"
-                  animate={{ rotateY: isFlipped ? 180 : 0 }}
-                  transition={{ type: "spring", stiffness: 280, damping: 24 }}
-                  style={{ backfaceVisibility: "hidden" }}
-                >
-                  <span className="text-xs font-semibold text-primary uppercase tracking-[0.2em] mb-6 bg-primary/10 px-3 py-1 rounded-full">
-                    {currentWord.partOfSpeech}
-                  </span>
-                  <h2 className="text-5xl font-bold tracking-tight mb-4 leading-none">
-                    {currentWord.word}
-                  </h2>
-                  <p className="text-muted-foreground/50 text-xs uppercase tracking-widest mt-10">
-                    Tap to reveal
-                  </p>
-                </motion.div>
-
-                {/* Back */}
-                <motion.div
-                  className="absolute inset-0 bg-primary rounded-3xl flex flex-col items-center justify-center p-8 text-center"
-                  initial={{ rotateY: 180 }}
-                  animate={{ rotateY: isFlipped ? 360 : 180 }}
-                  transition={{ type: "spring", stiffness: 280, damping: 24 }}
-                  style={{ backfaceVisibility: "hidden" }}
-                >
-                  <span className="text-primary-foreground/50 text-xl font-bold mb-6 opacity-50">
-                    {currentWord.word}
-                  </span>
-                  <p className="text-2xl font-semibold text-primary-foreground leading-snug">
-                    {currentWord.meaning}
-                  </p>
-                </motion.div>
+              {/* Card face */}
+              <div className="w-full h-full bg-card border border-border shadow-2xl rounded-3xl flex flex-col items-center justify-center p-8 text-center">
+                <span className="text-xs font-semibold text-primary uppercase tracking-[0.2em] mb-6 bg-primary/10 px-3 py-1 rounded-full">
+                  {currentWord.partOfSpeech}
+                </span>
+                <h2 className="text-5xl font-bold tracking-tight leading-none">
+                  {currentWord.word}
+                </h2>
               </div>
             </motion.div>
           )}
