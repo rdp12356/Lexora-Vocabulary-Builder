@@ -1,0 +1,217 @@
+import { Router, type IRouter } from "express";
+import { db } from "@workspace/db";
+import { wordsTable, userWordStatusTable } from "@workspace/db";
+import { eq, and, sql } from "drizzle-orm";
+import {
+  RecordSwipeParams,
+  RecordSwipeBody,
+  RecordSwipeResponse,
+  UpdateWordStatusParams,
+  UpdateWordStatusBody,
+  UpdateWordStatusResponse,
+  GetSwipeQueueResponse,
+  GetDailyLessonResponse,
+  GetStatsResponse,
+} from "@workspace/api-zod";
+
+const router: IRouter = Router();
+
+const GUEST_USER_ID = "guest";
+
+router.get("/swipe", async (_req, res) => {
+  const userId = GUEST_USER_ID;
+
+  const allWords = await db.select().from(wordsTable);
+
+  const statuses = await db
+    .select()
+    .from(userWordStatusTable)
+    .where(eq(userWordStatusTable.userId, userId));
+
+  const statusMap = new Map(statuses.map((s) => [s.wordId, s.status]));
+
+  const unknownWords = allWords.filter(
+    (w) => !statusMap.has(w.id) || statusMap.get(w.id) === "unknown",
+  );
+  const knownWords = allWords.filter((w) => statusMap.get(w.id) === "known");
+
+  // Include all unknown words + ~20% of known words
+  const knownSample = knownWords
+    .sort(() => Math.random() - 0.5)
+    .slice(0, Math.ceil(knownWords.length * 0.2));
+
+  const queue = [...unknownWords, ...knownSample].sort(
+    () => Math.random() - 0.5,
+  );
+
+  const result = GetSwipeQueueResponse.parse(
+    queue.map((w) => ({
+      id: w.id,
+      word: w.word,
+      meaning: w.meaning,
+      partOfSpeech: w.partOfSpeech,
+      status: (statusMap.get(w.id) ?? null) as "known" | "unknown" | null,
+    })),
+  );
+
+  res.json(result);
+});
+
+router.post("/swipe/:wordId", async (req, res) => {
+  const { wordId } = RecordSwipeParams.parse(req.params);
+  const body = RecordSwipeBody.parse(req.body);
+  const userId = GUEST_USER_ID;
+
+  const existing = await db
+    .select()
+    .from(userWordStatusTable)
+    .where(
+      and(
+        eq(userWordStatusTable.userId, userId),
+        eq(userWordStatusTable.wordId, wordId),
+      ),
+    )
+    .limit(1);
+
+  let statusRow;
+
+  if (existing.length) {
+    const updated = await db
+      .update(userWordStatusTable)
+      .set({ status: body.status, updatedAt: new Date() })
+      .where(
+        and(
+          eq(userWordStatusTable.userId, userId),
+          eq(userWordStatusTable.wordId, wordId),
+        ),
+      )
+      .returning();
+    statusRow = updated[0];
+  } else {
+    const inserted = await db
+      .insert(userWordStatusTable)
+      .values({ userId, wordId, status: body.status })
+      .returning();
+    statusRow = inserted[0];
+  }
+
+  const result = RecordSwipeResponse.parse({
+    wordId: statusRow!.wordId,
+    status: statusRow!.status,
+    updatedAt: statusRow!.updatedAt,
+  });
+
+  res.json(result);
+});
+
+router.put("/user-words/:wordId", async (req, res) => {
+  const { wordId } = UpdateWordStatusParams.parse(req.params);
+  const body = UpdateWordStatusBody.parse(req.body);
+  const userId = GUEST_USER_ID;
+
+  const existing = await db
+    .select()
+    .from(userWordStatusTable)
+    .where(
+      and(
+        eq(userWordStatusTable.userId, userId),
+        eq(userWordStatusTable.wordId, wordId),
+      ),
+    )
+    .limit(1);
+
+  let statusRow;
+
+  if (existing.length) {
+    const updated = await db
+      .update(userWordStatusTable)
+      .set({ status: body.status, updatedAt: new Date() })
+      .where(
+        and(
+          eq(userWordStatusTable.userId, userId),
+          eq(userWordStatusTable.wordId, wordId),
+        ),
+      )
+      .returning();
+    statusRow = updated[0];
+  } else {
+    const inserted = await db
+      .insert(userWordStatusTable)
+      .values({ userId, wordId, status: body.status })
+      .returning();
+    statusRow = inserted[0];
+  }
+
+  const result = UpdateWordStatusResponse.parse({
+    wordId: statusRow!.wordId,
+    status: statusRow!.status,
+    updatedAt: statusRow!.updatedAt,
+  });
+
+  res.json(result);
+});
+
+router.get("/daily-lesson", async (_req, res) => {
+  const userId = GUEST_USER_ID;
+
+  const allWords = await db.select().from(wordsTable);
+
+  const statuses = await db
+    .select()
+    .from(userWordStatusTable)
+    .where(eq(userWordStatusTable.userId, userId));
+
+  const statusMap = new Map(statuses.map((s) => [s.wordId, s.status]));
+
+  const unknownWords = allWords.filter(
+    (w) => !statusMap.has(w.id) || statusMap.get(w.id) === "unknown",
+  );
+
+  const lessonWords = unknownWords
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 5)
+    .map((w) => ({
+      id: w.id,
+      word: w.word,
+      meaning: w.meaning,
+      partOfSpeech: w.partOfSpeech,
+      status: (statusMap.get(w.id) ?? null) as "known" | "unknown" | null,
+    }));
+
+  const result = GetDailyLessonResponse.parse({
+    words: lessonWords,
+    date: new Date().toISOString().split("T")[0],
+  });
+
+  res.json(result);
+});
+
+router.get("/stats", async (_req, res) => {
+  const userId = GUEST_USER_ID;
+
+  const totalWords = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(wordsTable);
+
+  const statuses = await db
+    .select()
+    .from(userWordStatusTable)
+    .where(eq(userWordStatusTable.userId, userId));
+
+  const knownWords = statuses.filter((s) => s.status === "known").length;
+  const unknownWords = statuses.filter((s) => s.status === "unknown").length;
+  const total = totalWords[0]?.count ?? 0;
+  const unstudiedWords = total - knownWords - unknownWords;
+
+  const result = GetStatsResponse.parse({
+    totalWords: total,
+    knownWords,
+    unknownWords,
+    unstudiedWords,
+    streakDays: 1,
+  });
+
+  res.json(result);
+});
+
+export default router;

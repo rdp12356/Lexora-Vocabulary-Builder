@@ -3,13 +3,19 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Lexora Vocabulary Learning API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: words
+    description: Word operations
+  - name: userWords
+    description: User word status operations
+  - name: lessons
+    description: Daily lesson operations
 paths:
   /healthz:
     get:
@@ -24,6 +30,152 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /words:
+    get:
+      operationId: listWords
+      tags: [words]
+      summary: List all words
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search query for filtering words
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [known, unknown, all]
+          description: Filter by word status
+      responses:
+        "200":
+          description: List of words with user status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WordWithStatus"
+
+  /words/{id}:
+    get:
+      operationId: getWord
+      tags: [words]
+      summary: Get word detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Word detail with examples and status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WordDetail"
+        "404":
+          description: Word not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /swipe:
+    get:
+      operationId: getSwipeQueue
+      tags: [userWords]
+      summary: Get words for swipe session
+      description: Returns words prioritizing unknown words, with known words appearing less frequently
+      responses:
+        "200":
+          description: Queue of words for swiping
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WordWithStatus"
+
+  /swipe/{wordId}:
+    post:
+      operationId: recordSwipe
+      tags: [userWords]
+      summary: Record a swipe decision
+      parameters:
+        - name: wordId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SwipeBody"
+      responses:
+        "200":
+          description: Updated word status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWordStatus"
+
+  /user-words/{wordId}:
+    put:
+      operationId: updateWordStatus
+      tags: [userWords]
+      summary: Toggle word known/unknown status
+      parameters:
+        - name: wordId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWordStatusBody"
+      responses:
+        "200":
+          description: Updated status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWordStatus"
+
+  /daily-lesson:
+    get:
+      operationId: getDailyLesson
+      tags: [lessons]
+      summary: Get today's lesson words
+      description: Returns 3-5 words prioritizing unknown words for the daily lesson
+      responses:
+        "200":
+          description: Daily lesson words
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyLesson"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [userWords]
+      summary: Get user learning statistics
+      responses:
+        "200":
+          description: User stats summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +186,160 @@ components:
       required:
         - status
 
+    Word:
+      type: object
+      properties:
+        id:
+          type: integer
+        word:
+          type: string
+        meaning:
+          type: string
+        partOfSpeech:
+          type: string
+      required:
+        - id
+        - word
+        - meaning
+        - partOfSpeech
+
+    Example:
+      type: object
+      properties:
+        id:
+          type: integer
+        wordId:
+          type: integer
+        type:
+          type: string
+          enum: [casual, professional]
+        sentence:
+          type: string
+      required:
+        - id
+        - wordId
+        - type
+        - sentence
+
+    UserWordStatus:
+      type: object
+      properties:
+        wordId:
+          type: integer
+        status:
+          type: string
+          enum: [known, unknown]
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - wordId
+        - status
+        - updatedAt
+
+    WordWithStatus:
+      type: object
+      properties:
+        id:
+          type: integer
+        word:
+          type: string
+        meaning:
+          type: string
+        partOfSpeech:
+          type: string
+        status:
+          type: string
+          enum: [known, unknown]
+          nullable: true
+      required:
+        - id
+        - word
+        - meaning
+        - partOfSpeech
+
+    WordDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        word:
+          type: string
+        meaning:
+          type: string
+        partOfSpeech:
+          type: string
+        examples:
+          type: array
+          items:
+            $ref: "#/components/schemas/Example"
+        status:
+          type: string
+          enum: [known, unknown]
+          nullable: true
+      required:
+        - id
+        - word
+        - meaning
+        - partOfSpeech
+        - examples
+
+    SwipeBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [known, unknown]
+      required:
+        - status
+
+    UpdateWordStatusBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [known, unknown]
+      required:
+        - status
+
+    DailyLesson:
+      type: object
+      properties:
+        words:
+          type: array
+          items:
+            $ref: "#/components/schemas/WordWithStatus"
+        date:
+          type: string
+          format: date
+      required:
+        - words
+        - date
+
+    UserStats:
+      type: object
+      properties:
+        totalWords:
+          type: integer
+        knownWords:
+          type: integer
+        unknownWords:
+          type: integer
+        unstudiedWords:
+          type: integer
+        streakDays:
+          type: integer
+      required:
+        - totalWords
+        - knownWords
+        - unknownWords
+        - unstudiedWords
+        - streakDays
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error

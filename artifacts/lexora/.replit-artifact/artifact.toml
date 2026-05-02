@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Lexora"
+version = "1.0.0"
+id = "artifacts/lexora"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25810
+
+[services.development]
+run = "pnpm --filter @workspace/lexora run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/lexora", "run", "build" ]
+publicDir = "artifacts/lexora/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25810"
+BASE_PATH = "/"

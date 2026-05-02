@@ -1,0 +1,181 @@
+Build a modern, mobile-first web app called **Lexora** — a vocabulary learning platform focused on real-world usage and fast habit-based learning.
+
+## Goal
+
+Create a clean, fast, and addictive MVP where users can learn words daily and use a swipe-based system to classify words as known or unknown.
+
+---
+
+## Tech Stack
+
+* Frontend: React (latest) + Tailwind CSS
+* Backend: Supabase (Auth + Database)
+* Routing: React Router
+* Animations: Framer Motion (light usage)
+* State: React hooks only (no Redux)
+
+---
+
+## Core Features (MVP ONLY — do not overbuild)
+
+### 1. Swipe Mode (PRIMARY FEATURE)
+
+* Full-screen card UI
+* Show ONE word at a time
+* Display:
+
+  * Word (large, centered)
+  * Small hint (part of speech)
+* Interactions:
+
+  * Swipe RIGHT → mark as "Known"
+  * Swipe LEFT → mark as "Unknown"
+* Add:
+
+  * Smooth swipe animations
+  * Color feedback:
+
+    * Green (known)
+    * Red (unknown)
+  * Progress indicator (e.g., 5/20)
+
+---
+
+### 2. Word Buckets Screen
+
+* Two main buttons/cards:
+
+  * "Unknown Words"
+  * "Known Words"
+* Clicking opens respective lists
+
+---
+
+### 3. Word List Screen
+
+* Scrollable list of words
+* Each item shows:
+
+  * Word
+  * Status (known/unknown)
+* Include search functionality
+
+---
+
+### 4. Word Detail Screen
+
+* Shows:
+
+  * Word (large)
+  * Pronunciation (button placeholder)
+  * Meaning (simple)
+  * 2–3 real-world usage examples:
+
+    * Casual
+    * Professional
+* Actions:
+
+  * Toggle Known/Unknown
+  * Save word
+
+---
+
+### 5. Daily Lesson (Simple Version)
+
+* Show 3–5 words
+* Basic card layout
+* Button to enter Swipe Mode
+
+---
+
+## Database (Supabase)
+
+Create these tables:
+
+words:
+
+* id
+* word
+* meaning
+* part_of_speech
+
+examples:
+
+* id
+* word_id
+* type (casual/professional)
+* sentence
+
+user_word_status:
+
+* id
+* user_id
+* word_id
+* status (known/unknown)
+
+---
+
+## Logic
+
+* Swipe updates user_word_status
+* Unknown words should appear more often in Swipe Mode
+* Known words appear less frequently
+* Daily lesson prioritizes unknown words
+
+---
+
+## UI/UX Requirements
+
+* Dark mode by default
+* Minimal and clean (inspired by modern apps like Notion)
+* Mobile-first design
+* Smooth animations, no lag
+* One main action per screen
+
+---
+
+## Folder Structure
+
+/src
+/components
+/pages
+- Home.jsx
+- Swipe.jsx
+- Buckets.jsx
+- WordList.jsx
+- WordDetail.jsx
+/lib (Supabase config)
+/hooks
+
+---
+
+## Deliverables
+
+* Fully working React app
+* Supabase integration ready
+* Clean reusable components
+* Sample seed data (at least 20 words)
+* Navigation between screens
+* Ready to run in Replit preview
+
+---
+
+## Important Instructions
+
+* Do NOT add unnecessary features (no leaderboard, no achievements yet)
+* Focus on smooth UX and working core logic
+* Keep code clean and readable
+* Optimize for speed and simplicity
+
+---
+
+## End Goal
+
+The app should feel:
+
+* Fast (loads instantly)
+* Addictive (easy swipe interaction)
+* Useful (practical vocabulary learning)
+* Clean (premium UI)
+
+Start by building the Swipe Mode first, then implement the other screens.
