@@ -163,20 +163,28 @@ router.get("/daily-lesson", async (_req, res) => {
 
   const statusMap = new Map(statuses.map((s) => [s.wordId, s.status]));
 
-  const unknownWords = allWords.filter(
-    (w) => !statusMap.has(w.id) || statusMap.get(w.id) === "unknown",
-  );
+  const DAILY_LIMIT = 5;
 
-  const lessonWords = unknownWords
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 5)
-    .map((w) => ({
-      id: w.id,
-      word: w.word,
-      meaning: w.meaning,
-      partOfSpeech: w.partOfSpeech,
-      status: (statusMap.get(w.id) ?? null) as "known" | "unknown" | null,
-    }));
+  const unknownWords = allWords
+    .filter((w) => !statusMap.has(w.id) || statusMap.get(w.id) === "unknown")
+    .sort(() => Math.random() - 0.5);
+
+  const knownWords = allWords
+    .filter((w) => statusMap.get(w.id) === "known")
+    .sort(() => Math.random() - 0.5);
+
+  const picked = [
+    ...unknownWords.slice(0, DAILY_LIMIT),
+    ...knownWords.slice(0, Math.max(0, DAILY_LIMIT - unknownWords.length)),
+  ].slice(0, DAILY_LIMIT);
+
+  const lessonWords = picked.map((w) => ({
+    id: w.id,
+    word: w.word,
+    meaning: w.meaning,
+    partOfSpeech: w.partOfSpeech,
+    status: (statusMap.get(w.id) ?? null) as "known" | "unknown" | null,
+  }));
 
   const result = GetDailyLessonResponse.parse({
     words: lessonWords,
