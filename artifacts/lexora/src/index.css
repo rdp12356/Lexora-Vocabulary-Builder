@@ -10,39 +10,30 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
-
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
   --color-card-border: hsl(var(--card-border));
-
   --color-popover: hsl(var(--popover));
   --color-popover-foreground: hsl(var(--popover-foreground));
   --color-popover-border: hsl(var(--popover-border));
-
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-primary-border: var(--primary-border);
-
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-secondary-border: var(--secondary-border);
-
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
   --color-muted-border: var(--muted-border);
-
   --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
   --color-accent-border: var(--accent-border);
-
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
   --color-destructive-border: var(--destructive-border);
-
   --font-sans: var(--app-font-sans);
   --font-serif: var(--app-font-serif);
   --font-mono: var(--app-font-mono);
-
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -50,12 +41,11 @@
 }
 
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
+  --button-outline: rgba(0,0,0,.10);
+  --badge-outline: rgba(0,0,0,.05);
   --opaque-button-border-intensity: -8;
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
-
+  --elevate-1: rgba(0,0,0,.03);
+  --elevate-2: rgba(0,0,0,.08);
   --background: 0 0% 100%;
   --foreground: 222 47% 11%;
   --border: 214 32% 91%;
@@ -77,12 +67,10 @@
   --destructive-foreground: 210 40% 98%;
   --input: 214 32% 91%;
   --ring: 258 90% 60%;
-
   --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
   --radius: 1rem;
-
   --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
@@ -91,57 +79,99 @@
 }
 
 .dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
+  --button-outline: rgba(255,255,255,.10);
+  --badge-outline: rgba(255,255,255,.05);
   --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
-
-  --background: 245 20% 5%;
+  --elevate-1: rgba(255,255,255,.04);
+  --elevate-2: rgba(255,255,255,.09);
+  --background: 248 25% 4%;
   --foreground: 0 0% 96%;
-  --border: 245 15% 14%;
-
-  --card: 245 18% 9%;
+  --border: 248 18% 13%;
+  --card: 248 22% 7%;
   --card-foreground: 0 0% 96%;
-  --card-border: 245 15% 16%;
-
-  --popover: 245 18% 9%;
+  --card-border: 248 18% 14%;
+  --popover: 248 22% 7%;
   --popover-foreground: 0 0% 96%;
-  --popover-border: 245 15% 16%;
-
+  --popover-border: 248 18% 14%;
   --primary: 258 90% 68%;
   --primary-foreground: 0 0% 100%;
-
-  --secondary: 245 15% 14%;
+  --secondary: 248 18% 12%;
   --secondary-foreground: 0 0% 96%;
-
-  --muted: 245 15% 13%;
-  --muted-foreground: 245 8% 58%;
-
+  --muted: 248 18% 12%;
+  --muted-foreground: 248 8% 55%;
   --accent: 258 90% 68%;
   --accent-foreground: 0 0% 100%;
-
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 98%;
-
-  --input: 245 15% 14%;
+  --input: 248 18% 13%;
   --ring: 258 90% 68%;
-
-  --success: 142 71% 45%;
-  --success-foreground: 0 0% 100%;
 }
 
+/* ── Liquid glass utility ─────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.065);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 16px 48px rgba(0, 0, 0, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+.glass-nav {
+  background: rgba(10, 8, 20, 0.75);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Orb float animations ─────────────────────────────────────── */
+@keyframes orb-a {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  33%       { transform: translate(30px, -40px) scale(1.06); }
+  66%       { transform: translate(-15px, 20px) scale(0.96); }
+}
+@keyframes orb-b {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  33%       { transform: translate(-25px, 30px) scale(1.04); }
+  66%       { transform: translate(20px, -20px) scale(0.97); }
+}
+@keyframes orb-c {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  50%       { transform: translate(15px, -25px) scale(1.08); }
+}
+
+.orb-a { animation: orb-a 14s ease-in-out infinite; }
+.orb-b { animation: orb-b 18s ease-in-out infinite; }
+.orb-c { animation: orb-c 22s ease-in-out infinite; }
+
 @layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply font-sans antialiased bg-background text-foreground;
-  }
-
-  ::-webkit-scrollbar {
-    width: 0px;
-    height: 0px;
-  }
+  * { @apply border-border; }
+  body { @apply font-sans antialiased bg-background text-foreground; }
+  ::-webkit-scrollbar { width: 0; height: 0; }
 }
