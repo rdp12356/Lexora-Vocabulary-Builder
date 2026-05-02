@@ -1,10 +1,10 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { BookOpen, Layers, LayoutDashboard } from "lucide-react";
+import { BookOpen, Layers, Home } from "lucide-react";
 
 const NAV_ITEMS = [
-  { href: "/", icon: LayoutDashboard, label: "Home" },
+  { href: "/", icon: Home, label: "Home" },
   { href: "/buckets", icon: Layers, label: "Buckets" },
   { href: "/words", icon: BookOpen, label: "Words" },
 ];
@@ -21,41 +21,40 @@ export function Layout({ children }: { children: ReactNode }) {
         </main>
 
         {!isSwipeMode && (
-          <nav className="sticky bottom-0 w-full z-50 border-t border-border/50 bg-card/80 backdrop-blur-xl">
-            <div className="flex items-center justify-around h-[60px] px-2">
+          <nav className="sticky bottom-0 w-full z-50 bg-card/90 backdrop-blur-2xl border-t border-border/60">
+            <div className="flex items-stretch justify-around h-[62px] px-3">
               {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
                 const isActive =
-                  href === "/"
-                    ? location === "/"
-                    : location.startsWith(href);
+                  href === "/" ? location === "/" : location.startsWith(href);
 
                 return (
                   <Link
                     key={href}
                     href={href}
-                    className="relative flex flex-col items-center justify-center w-20 h-full gap-1"
-                    data-testid={`nav-${label.toLowerCase()}`}
+                    className="relative flex flex-col items-center justify-center w-20 gap-1"
                   >
                     {isActive && (
                       <motion.div
-                        layoutId="nav-indicator"
-                        className="absolute top-1 w-10 h-0.5 rounded-full bg-primary"
+                        layoutId="nav-pill"
+                        className="absolute inset-x-1 inset-y-2 rounded-xl"
+                        style={{ background: "hsl(var(--primary) / 0.12)" }}
                         transition={{ type: "spring", stiffness: 500, damping: 35 }}
                       />
                     )}
                     <motion.div
-                      animate={{ color: isActive ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}
+                      animate={{
+                        color: isActive
+                          ? "hsl(var(--primary))"
+                          : "hsl(var(--muted-foreground))",
+                        y: isActive ? -1 : 0,
+                      }}
                       transition={{ duration: 0.15 }}
+                      className="relative z-10"
                     >
-                      <Icon
-                        size={21}
-                        className={isActive ? "text-primary" : "text-muted-foreground"}
-                      />
+                      <Icon size={20} strokeWidth={isActive ? 2.5 : 1.8} />
                     </motion.div>
                     <span
-                      className={`text-[10px] font-medium tracking-wide transition-colors ${
-                        isActive ? "text-primary" : "text-muted-foreground"
-                      }`}
+                      className={`relative z-10 text-[10px] font-semibold transition-colors ${isActive ? "text-primary" : "text-muted-foreground/70"}`}
                     >
                       {label}
                     </span>
