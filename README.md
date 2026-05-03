@@ -30,7 +30,7 @@ Built as a clean TypeScript monorepo — perfect for fun, addictive language lea
 
 ## 📁 Project Structure
 
-```bash
+bash
 Lexora-Vocabulary-Builder/
 ├── lib/                    # Shared packages (api-spec, api-zod, api-client-react, db, etc.)
 ├── artifacts/              # Build outputs
@@ -40,7 +40,10 @@ Lexora-Vocabulary-Builder/
 ├── pnpm-workspace.yaml
 ├── pnpm-lock.yaml
 └── .replit                 # Replit configuration
-🚀 Quick Start
+
+
+
+## 🚀 Quick Start
 Prerequisites
 
 Node.js 24+
