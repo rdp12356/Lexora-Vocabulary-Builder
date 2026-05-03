@@ -1,0 +1,10 @@
+{
+  "buildCommand": "npm run build --workspace @workspace/lexora",
+  "outputDirectory": "artifacts/lexora/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

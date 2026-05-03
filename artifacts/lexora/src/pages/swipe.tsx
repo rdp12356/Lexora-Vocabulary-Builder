@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   motion,
   useMotionValue,
@@ -18,6 +18,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { X, Check, ArrowLeft, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { decryptVaultWords, type VaultWordRecord } from "@/lib/crypto";
+import { useVault } from "@/components/vault-provider";
 
 const SWIPE_THRESHOLD = 80;
 const VELOCITY_THRESHOLD = 400;
@@ -27,12 +29,45 @@ export default function Swipe() {
   const queryClient = useQueryClient();
   const { data: queue, isLoading } = useGetSwipeQueue();
   const recordSwipe = useRecordSwipe();
+  const { key } = useVault();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [swipeCount, setSwipeCount] = useState({ known: 0, unknown: 0 });
+  const [displayQueue, setDisplayQueue] = useState<VaultWordRecord[]>([]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function decryptQueue() {
+      if (!queue?.length) {
+        if (active) {
+          setDisplayQueue([]);
+        }
+        return;
+      }
+
+      if (!key) {
+        if (active) {
+          setDisplayQueue(queue as VaultWordRecord[]);
+        }
+        return;
+      }
+
+      const decrypted = await decryptVaultWords(queue as VaultWordRecord[], key);
+      if (active) {
+        setDisplayQueue(decrypted);
+      }
+    }
+
+    void decryptQueue();
+
+    return () => {
+      active = false;
+    };
+  }, [key, queue]);
 
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-250, 0, 250], [-22, 0, 22]);
@@ -43,7 +78,7 @@ export default function Swipe() {
   const bgGreenOpacity = useTransform(x, [0, 160], [0, 0.18]);
   const cardScale = useTransform(x, [-250, 0, 250], [0.97, 1, 0.97]);
 
-  const words = queue || [];
+  const words = displayQueue;
   const currentWord = words[currentIndex];
   const nextWord = words[currentIndex + 1];
 
@@ -199,36 +234,36 @@ export default function Swipe() {
       </div>
 
       {/* Header */}
-      <div className="relative flex items-center justify-between px-5 pt-8 pb-4 z-10">
+      <div className="relative flex items-center justify-between px-5 pt-6 pb-2 z-10">
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-full bg-card/60 backdrop-blur w-10 h-10"
+          className="rounded-full glass-button w-10 h-10"
           onClick={() => setLocation("/")}
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
         </Button>
-        <span className="text-sm font-semibold text-muted-foreground tabular-nums">
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 tabular-nums bg-white/5 px-3 py-1 rounded-full border border-white/5">
           {currentIndex + 1} / {words.length}
         </span>
         <div className="w-10" />
       </div>
 
       {/* Cards Stack */}
-      <div className="flex-1 flex items-center justify-center px-5 pb-6 relative">
+      <div className="flex-1 flex items-center justify-center px-5 pb-4 relative">
         {/* Background (next) card */}
         <AnimatePresence>
           {nextWord && (
             <motion.div
               key={`bg-${nextWord.id}`}
-              className="absolute w-full max-w-[340px]"
-              style={{ aspectRatio: "3/4" }}
-              initial={{ scale: 0.9, y: 16, opacity: 0.4 }}
-              animate={{ scale: 0.93, y: 12, opacity: 0.5 }}
+              className="absolute w-full max-w-[320px]"
+              style={{ aspectRatio: "3.2/4" }}
+              initial={{ scale: 0.9, y: 12, opacity: 0.4 }}
+              animate={{ scale: 0.93, y: 8, opacity: 0.5 }}
               exit={{ scale: 0.9, opacity: 0 }}
             >
-              <div className="w-full h-full bg-card border border-border/50 rounded-3xl shadow-lg flex items-center justify-center">
-                <span className="text-2xl font-bold text-muted-foreground/30">{nextWord.word}</span>
+              <div className="w-full h-full glass-card rounded-[2.5rem] flex items-center justify-center">
+                <span className="text-xl font-bold text-muted-foreground/20 uppercase tracking-widest">{nextWord.word}</span>
               </div>
             </motion.div>
           )}
@@ -239,33 +274,33 @@ export default function Swipe() {
           {currentWord && (
             <motion.div
               key={`card-${currentWord.id}`}
-              className="absolute w-full max-w-[340px] cursor-grab active:cursor-grabbing z-10"
-              style={{ aspectRatio: "3/4", x, rotate, scale: cardScale }}
+              className="absolute w-full max-w-[320px] cursor-grab active:cursor-grabbing z-10"
+              style={{ aspectRatio: "3.2/4", x, rotate, scale: cardScale }}
               drag="x"
               dragElastic={0.15}
               dragConstraints={{ top: 0, bottom: 0 }}
               onDragEnd={handleDragEnd}
-              initial={{ scale: 0.92, opacity: 0, y: 20 }}
+              initial={{ scale: 0.92, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 28 }}
               onClick={() => !isAnimating && setIsFlipped((f) => !f)}
             >
               {/* Known overlay */}
               <motion.div
-                className="absolute inset-0 rounded-3xl border-4 border-green-500 z-10 pointer-events-none flex items-start justify-end p-5"
+                className="absolute inset-0 rounded-[2.5rem] border-4 border-green-500 z-10 pointer-events-none flex items-start justify-end p-5"
                 style={{ opacity: knownOpacity }}
               >
-                <div className="bg-green-500 rounded-full p-2">
+                <div className="bg-green-500 rounded-full p-2 shadow-[0_0_20px_rgba(34,197,94,0.5)]">
                   <Check size={20} className="text-white" strokeWidth={3} />
                 </div>
               </motion.div>
 
               {/* Unknown overlay */}
               <motion.div
-                className="absolute inset-0 rounded-3xl border-4 border-red-500 z-10 pointer-events-none flex items-start justify-start p-5"
+                className="absolute inset-0 rounded-[2.5rem] border-4 border-red-500 z-10 pointer-events-none flex items-start justify-start p-5"
                 style={{ opacity: unknownOpacity }}
               >
-                <div className="bg-red-500 rounded-full p-2">
+                <div className="bg-red-500 rounded-full p-2 shadow-[0_0_20px_rgba(239,68,68,0.5)]">
                   <X size={20} className="text-white" strokeWidth={3} />
                 </div>
               </motion.div>
@@ -274,34 +309,48 @@ export default function Swipe() {
               <div className="w-full h-full relative" style={{ transformStyle: "preserve-3d" }}>
                 {/* Front */}
                 <motion.div
-                  className="absolute inset-0 bg-card border border-border shadow-2xl rounded-3xl flex flex-col items-center justify-center p-8 text-center"
+                  className="absolute inset-0 glass-card rounded-[2.5rem] flex flex-col items-center justify-center p-8 text-center"
                   animate={{ rotateY: isFlipped ? 180 : 0 }}
                   transition={{ type: "spring", stiffness: 280, damping: 24 }}
                   style={{ backfaceVisibility: "hidden" }}
                 >
-                  <span className="text-xs font-semibold text-primary uppercase tracking-[0.2em] mb-6 bg-primary/10 px-3 py-1 rounded-full">
+                  <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-4 bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20">
                     {currentWord.partOfSpeech}
                   </span>
-                  <h2 className="text-5xl font-bold tracking-tight mb-4 leading-none">
+                  <h2 className="text-4xl font-black tracking-tighter mb-4 leading-none text-glow">
                     {currentWord.word}
                   </h2>
-                  <p className="text-muted-foreground/50 text-xs uppercase tracking-widest mt-10">
-                    Tap to reveal
-                  </p>
+                  
+                  <div className="flex items-center gap-3 mt-8">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const utterance = new SpeechSynthesisUtterance(currentWord.word);
+                        utterance.rate = 0.9;
+                        window.speechSynthesis.speak(utterance);
+                      }}
+                      className="p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white/40 hover:text-white transition-all"
+                    >
+                      <RotateCcw size={16} />
+                    </button>
+                    <p className="text-white/20 text-[9px] uppercase font-black tracking-[0.4em]">
+                      Tap to reveal
+                    </p>
+                  </div>
                 </motion.div>
 
                 {/* Back */}
                 <motion.div
-                  className="absolute inset-0 bg-primary rounded-3xl flex flex-col items-center justify-center p-8 text-center"
+                  className="absolute inset-0 bg-primary rounded-[2.5rem] flex flex-col items-center justify-center p-8 text-center shadow-[0_0_50px_rgba(139,92,246,0.3)]"
                   initial={{ rotateY: 180 }}
                   animate={{ rotateY: isFlipped ? 360 : 180 }}
                   transition={{ type: "spring", stiffness: 280, damping: 24 }}
                   style={{ backfaceVisibility: "hidden" }}
                 >
-                  <span className="text-primary-foreground/50 text-xl font-bold mb-6 opacity-50">
+                  <span className="text-white/40 text-sm font-black uppercase tracking-widest mb-6">
                     {currentWord.word}
                   </span>
-                  <p className="text-2xl font-semibold text-primary-foreground leading-snug">
+                  <p className="text-xl font-bold text-white leading-snug tracking-tight">
                     {currentWord.meaning}
                   </p>
                 </motion.div>
@@ -312,24 +361,24 @@ export default function Swipe() {
       </div>
 
       {/* Action buttons */}
-      <div className="flex items-center justify-center gap-8 pb-10 z-10 relative">
+      <div className="flex items-center justify-center gap-10 pb-8 z-10 relative">
         <motion.button
           whileTap={{ scale: 0.9 }}
-          className="w-16 h-16 rounded-full border-2 border-red-500/40 bg-red-500/5 text-red-500 flex items-center justify-center shadow-lg transition-colors hover:bg-red-500/20"
+          className="w-14 h-14 rounded-full border border-red-500/20 bg-red-500/10 text-red-400 flex items-center justify-center shadow-lg transition-all hover:bg-red-500/20 active:bg-red-500/30"
           onClick={() => swipeCard("left")}
           disabled={isAnimating}
           data-testid="button-unknown"
         >
-          <X size={28} strokeWidth={2.5} />
+          <X size={24} strokeWidth={3} />
         </motion.button>
         <motion.button
           whileTap={{ scale: 0.9 }}
-          className="w-16 h-16 rounded-full border-2 border-green-500/40 bg-green-500/5 text-green-500 flex items-center justify-center shadow-lg transition-colors hover:bg-green-500/20"
+          className="w-14 h-14 rounded-full border border-green-500/20 bg-green-500/10 text-green-400 flex items-center justify-center shadow-lg transition-all hover:bg-green-500/20 active:bg-green-500/30"
           onClick={() => swipeCard("right")}
           disabled={isAnimating}
           data-testid="button-known"
         >
-          <Check size={28} strokeWidth={2.5} />
+          <Check size={24} strokeWidth={3} />
         </motion.button>
       </div>
 

@@ -27,6 +27,12 @@ export const ListWordsQueryParams = zod.object({
     .enum(["known", "unknown", "all"])
     .optional()
     .describe("Filter by word status"),
+  limit: zod.coerce
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe("Maximum number of words to return"),
 });
 
 export const ListWordsResponseItem = zod.object({

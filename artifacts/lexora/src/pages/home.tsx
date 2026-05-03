@@ -1,8 +1,11 @@
-import { useGetDailyLesson, useGetStats } from "@workspace/api-client-react";
+import { useEffect, useState } from "react";
+import { useGetStats, useListWords } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { Flame, Zap, BookOpen, TrendingUp } from "lucide-react";
+import { decryptVaultWords, type VaultWordRecord } from "@/lib/crypto";
+import { useVault } from "@/components/vault-provider";
 
 const stagger = {
   container: {
@@ -13,11 +16,47 @@ const stagger = {
     hidden: { opacity: 0, y: 16 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 400, damping: 30 } },
   },
-};
+} as const;
 
 export default function Home() {
   const { data: stats, isLoading: statsLoading } = useGetStats();
-  const { data: dailyLesson, isLoading: lessonLoading } = useGetDailyLesson();
+  const { data: words, isLoading: wordsLoading } = useListWords({
+    status: "all",
+    limit: 5,
+  });
+  const { key } = useVault();
+  const [displayWords, setDisplayWords] = useState<VaultWordRecord[]>([]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function decryptWords() {
+      if (!words?.length) {
+        if (active) {
+          setDisplayWords([]);
+        }
+        return;
+      }
+
+      if (!key) {
+        if (active) {
+          setDisplayWords(words as VaultWordRecord[]);
+        }
+        return;
+      }
+
+      const decrypted = await decryptVaultWords(words as VaultWordRecord[], key);
+      if (active) {
+        setDisplayWords(decrypted);
+      }
+    }
+
+    void decryptWords();
+
+    return () => {
+      active = false;
+    };
+  }, [key, words]);
 
   const knownPct = stats?.totalWords
     ? Math.round((stats.knownWords / stats.totalWords) * 100)
@@ -31,21 +70,21 @@ export default function Home() {
       className="flex flex-col min-h-full pb-24"
     >
       {/* Header */}
-      <motion.header variants={stagger.item} className="px-6 pt-12 pb-4">
+      <motion.header variants={stagger.item} className="px-6 pt-10 pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Lexora</h1>
-            <p className="text-muted-foreground text-sm mt-0.5">Your daily vocabulary ritual</p>
+            <h1 className="text-2xl font-black tracking-tighter text-glow">Lexora</h1>
+            <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em] mt-1">Daily Ritual</p>
           </div>
           {stats && (
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="flex items-center gap-1.5 text-orange-400 bg-orange-500/10 border border-orange-500/20 px-3 py-2 rounded-full font-semibold text-sm"
+              className="flex items-center gap-1.5 text-orange-400 bg-orange-500/10 border border-orange-500/20 px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-wider"
             >
-              <Flame size={15} />
-              <span>{stats.streakDays} day streak</span>
+              <Flame size={12} />
+              <span>{stats.streakDays} Day Streak</span>
             </motion.div>
           )}
         </div>
@@ -53,16 +92,16 @@ export default function Home() {
 
       {/* Stats row */}
       <motion.section variants={stagger.item} className="px-6 mb-6">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2.5">
           {statsLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-20 rounded-2xl bg-muted animate-pulse" />
+              <div key={i} className="h-16 rounded-2xl bg-white/5 animate-pulse" />
             ))
           ) : (
             <>
-              <StatCard label="Known" value={stats?.knownWords ?? 0} icon={<BookOpen size={15} />} color="text-primary" bg="bg-primary/10" />
-              <StatCard label="Learning" value={stats?.unknownWords ?? 0} icon={<Zap size={15} />} color="text-amber-400" bg="bg-amber-500/10" />
-              <StatCard label="Mastery" value={`${knownPct}%`} icon={<TrendingUp size={15} />} color="text-green-400" bg="bg-green-500/10" />
+              <StatCard label="Known" value={stats?.knownWords ?? 0} icon={<BookOpen size={12} />} color="text-primary" bg="bg-primary/10" />
+              <StatCard label="Learning" value={stats?.unknownWords ?? 0} icon={<Zap size={12} />} color="text-amber-400" bg="bg-amber-500/10" />
+              <StatCard label="Mastery" value={`${knownPct}%`} icon={<TrendingUp size={12} />} color="text-green-400" bg="bg-green-500/10" />
             </>
           )}
         </div>
@@ -70,15 +109,15 @@ export default function Home() {
 
       {/* Mastery bar */}
       {!statsLoading && stats && (
-        <motion.section variants={stagger.item} className="px-6 mb-8">
-          <div className="bg-card border border-border/50 rounded-2xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-muted-foreground">Overall progress</span>
-              <span className="text-sm font-bold">{stats.knownWords} / {stats.totalWords} words</span>
+        <motion.section variants={stagger.item} className="px-6 mb-6">
+          <div className="glass-card rounded-2xl p-4 border-white/5">
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Progress</span>
+              <span className="text-[10px] font-black text-white/80 tabular-nums">{stats.knownWords} / {stats.totalWords} WORDS</span>
             </div>
-            <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div className="h-1 bg-white/5 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-primary rounded-full"
+                className="h-full bg-primary rounded-full shadow-[0_0_10px_rgba(139,92,246,0.5)]"
                 initial={{ width: 0 }}
                 animate={{ width: `${knownPct}%` }}
                 transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
@@ -88,12 +127,12 @@ export default function Home() {
         </motion.section>
       )}
 
-      {/* Today's lesson */}
+      {/* Words */}
       <motion.section variants={stagger.item} className="px-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Today's Lesson</h2>
-          <span className="text-sm text-muted-foreground">
-            {lessonLoading ? "..." : `${dailyLesson?.words?.length ?? 0} words`}
+        <div className="flex items-center justify-between mb-3.5">
+          <h2 className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Test Words</h2>
+          <span className="text-[9px] font-black text-white/40 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-full">
+            {wordsLoading ? "..." : `${displayWords.length} WORDS`}
           </span>
         </div>
 
@@ -101,27 +140,27 @@ export default function Home() {
           variants={stagger.container}
           initial="hidden"
           animate="show"
-          className="space-y-2.5 mb-6"
+          className="space-y-2 mb-6"
         >
-          {lessonLoading ? (
+          {wordsLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-[72px] rounded-2xl bg-muted animate-pulse" />
+              <div key={i} className="h-14 rounded-xl bg-white/5 animate-pulse" />
             ))
-          ) : dailyLesson?.words?.length ? (
-            dailyLesson.words.slice(0, 5).map((word) => (
+          ) : displayWords.length ? (
+            displayWords.map((word) => (
               <motion.div
                 key={word.id}
                 variants={stagger.item}
               >
                 <Link href={`/words/${word.id}`}>
-                  <div className="bg-card border border-border/40 hover:border-primary/30 rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer group">
+                  <div className="glass-card hover:bg-white/5 rounded-xl p-3.5 flex items-center justify-between transition-all cursor-pointer group border-white/5">
                     <div>
-                      <div className="font-semibold text-base group-hover:text-primary transition-colors">
+                      <div className="font-bold text-sm group-hover:text-primary transition-colors tracking-tight">
                         {word.word}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">{word.partOfSpeech}</div>
+                      <div className="text-[9px] text-white/30 font-black uppercase tracking-widest mt-0.5">{word.partOfSpeech}</div>
                     </div>
-                    <div className="text-sm text-muted-foreground text-right max-w-[140px] truncate">
+                    <div className="text-[10px] text-white/40 text-right max-w-[140px] truncate italic font-medium">
                       {word.meaning}
                     </div>
                   </div>
@@ -129,16 +168,16 @@ export default function Home() {
               </motion.div>
             ))
           ) : (
-            <div className="bg-card rounded-2xl p-6 text-center text-muted-foreground border border-border/50">
-              No words for today — come back tomorrow!
+            <div className="glass-card rounded-xl p-6 text-center text-white/30 border-white/5 text-xs font-medium">
+              No test words found.
             </div>
           )}
         </motion.div>
 
         <Link href="/swipe" className="block">
           <motion.div whileTap={{ scale: 0.98 }}>
-            <Button size="lg" className="w-full h-14 text-base font-semibold rounded-2xl shadow-lg shadow-primary/20">
-              Start Swipe Mode
+            <Button size="lg" className="w-full h-14 text-[13px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90">
+              Start Session
             </Button>
           </motion.div>
         </Link>
@@ -161,13 +200,13 @@ function StatCard({
   bg: string;
 }) {
   return (
-    <div className="bg-card border border-border/40 rounded-2xl p-3.5 flex flex-col gap-2">
-      <div className={`${bg} ${color} w-7 h-7 rounded-lg flex items-center justify-center`}>
+    <div className="glass-card rounded-2xl p-3 flex flex-col gap-2 border-white/5">
+      <div className={`${bg} ${color} w-6 h-6 rounded-lg flex items-center justify-center`}>
         {icon}
       </div>
       <div>
-        <div className="text-xl font-bold leading-none">{value}</div>
-        <div className="text-xs text-muted-foreground mt-1">{label}</div>
+        <div className="text-lg font-black leading-none tabular-nums tracking-tight">{value}</div>
+        <div className="text-[9px] font-black text-white/30 uppercase tracking-widest mt-1.5">{label}</div>
       </div>
     </div>
   );

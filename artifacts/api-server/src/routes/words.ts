@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
+import { type AuthRequest } from "../middlewares/auth";
 import { db } from "@workspace/db";
 import { wordsTable, examplesTable, userWordStatusTable } from "@workspace/db";
-import { eq, and, ilike, or } from "drizzle-orm";
+import { eq, and, ilike, or, desc } from "drizzle-orm";
 import {
   ListWordsQueryParams,
   GetWordParams,
@@ -11,30 +12,46 @@ import {
 
 const router: IRouter = Router();
 
-const GUEST_USER_ID = "guest";
-
-router.get("/words", async (req, res) => {
+router.get("/words", async (req: AuthRequest, res) => {
   const query = ListWordsQueryParams.parse(req.query);
-  const userId = GUEST_USER_ID;
+  const userId = req.user?.id;
 
-  let wordsQuery = db.select().from(wordsTable).$dynamic();
+  // Fetch words with optional search filter
+  let wordsQuery = db
+    .select({
+      id: wordsTable.id,
+      word: wordsTable.word,
+      meaning: wordsTable.meaning_advanced,
+      partOfSpeech: wordsTable.partOfSpeech,
+    })
+    .from(wordsTable)
+    .$dynamic();
 
   if (query.search) {
     wordsQuery = wordsQuery.where(
       or(
         ilike(wordsTable.word, `%${query.search}%`),
-        ilike(wordsTable.meaning, `%${query.search}%`),
+        ilike(wordsTable.meaning_advanced, `%${query.search}%`),
       ),
     );
   }
 
-  const words = await wordsQuery;
+  wordsQuery = wordsQuery.orderBy(desc(wordsTable.id));
 
-  const statuses = await db
-    .select()
-    .from(userWordStatusTable)
-    .where(eq(userWordStatusTable.userId, userId));
+  if (query.limit) {
+    wordsQuery = wordsQuery.limit(query.limit);
+  }
 
+  // Fetch user statuses only if userId exists
+  const statusesPromise = userId
+    ? db
+        .select({ wordId: userWordStatusTable.wordId, status: userWordStatusTable.status })
+        .from(userWordStatusTable)
+        .where(eq(userWordStatusTable.userId, userId))
+    : Promise.resolve([] as Array<{ wordId: number; status: string }>);
+
+  // Execute both queries in parallel for better performance
+  const [words, statuses] = await Promise.all([wordsQuery, statusesPromise]);
   const statusMap = new Map(statuses.map((s) => [s.wordId, s.status]));
 
   let result = words.map((w) => ({
@@ -53,12 +70,17 @@ router.get("/words", async (req, res) => {
   res.json(parsed);
 });
 
-router.get("/words/:id", async (req, res) => {
+router.get("/words/:id", async (req: AuthRequest, res) => {
   const { id } = GetWordParams.parse(req.params);
-  const userId = GUEST_USER_ID;
+  const userId = req.user?.id;
 
   const word = await db
-    .select()
+    .select({
+      id: wordsTable.id,
+      word: wordsTable.word,
+      meaning: wordsTable.meaning_advanced,
+      partOfSpeech: wordsTable.partOfSpeech,
+    })
     .from(wordsTable)
     .where(eq(wordsTable.id, id))
     .limit(1);
@@ -69,22 +91,30 @@ router.get("/words/:id", async (req, res) => {
   }
 
   const examples = await db
-    .select()
+    .select({
+      id: examplesTable.id,
+      wordId: examplesTable.wordId,
+      type: examplesTable.type,
+      sentence: examplesTable.sentence,
+    })
     .from(examplesTable)
     .where(eq(examplesTable.wordId, id));
 
-  const statusRows = await db
-    .select()
-    .from(userWordStatusTable)
-    .where(
-      and(
-        eq(userWordStatusTable.userId, userId),
-        eq(userWordStatusTable.wordId, id),
-      ),
-    )
-    .limit(1);
+  let status = null;
+  if (userId) {
+    const statusRows = await db
+      .select()
+      .from(userWordStatusTable)
+      .where(
+        and(
+          eq(userWordStatusTable.userId, userId),
+          eq(userWordStatusTable.wordId, id),
+        ),
+      )
+      .limit(1);
 
-  const status = statusRows[0]?.status ?? null;
+    status = statusRows[0]?.status ?? null;
+  }
 
   const result = GetWordResponse.parse({
     ...word[0],

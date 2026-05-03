@@ -129,6 +129,10 @@ export type ListWordsParams = {
    * Filter by word status
    */
   status?: ListWordsStatus;
+  /**
+   * Maximum number of words to return
+   */
+  limit?: number;
 };
 
 export type ListWordsStatus =

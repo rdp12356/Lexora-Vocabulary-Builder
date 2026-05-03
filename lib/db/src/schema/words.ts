@@ -5,7 +5,8 @@ import { z } from "zod/v4";
 export const wordsTable = pgTable("words", {
   id: serial("id").primaryKey(),
   word: text("word").notNull(),
-  meaning: text("meaning").notNull(),
+  meaning_simple: text("meaning_simple").notNull(),
+  meaning_advanced: text("meaning_advanced").notNull(),
   partOfSpeech: text("part_of_speech").notNull(),
 });
 

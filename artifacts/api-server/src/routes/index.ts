@@ -1,11 +1,13 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
+import adminRouter from "./admin";
 import wordsRouter from "./words";
 import userWordsRouter from "./userWords";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(adminRouter);
 router.use(wordsRouter);
 router.use(userWordsRouter);
 

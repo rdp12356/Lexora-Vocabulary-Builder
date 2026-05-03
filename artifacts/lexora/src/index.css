@@ -110,35 +110,35 @@
   --elevate-2: rgba(255,255,255, .09);
 
   /* Deep dark blue/gray theme with cobalt accent */
-  --background: 240 10% 4%;
-  --foreground: 0 0% 98%;
-  --border: 240 10% 12%;
+  --background: 240 20% 4%;
+  --foreground: 0 0% 100%;
+  --border: 240 10% 15%;
   
-  --card: 240 10% 6%;
-  --card-foreground: 0 0% 98%;
-  --card-border: 240 10% 12%;
+  --card: 240 10% 10%;
+  --card-foreground: 0 0% 100%;
+  --card-border: 240 10% 20%;
   
-  --popover: 240 10% 6%;
-  --popover-foreground: 0 0% 98%;
-  --popover-border: 240 10% 12%;
+  --popover: 240 10% 8%;
+  --popover-foreground: 0 0% 100%;
+  --popover-border: 240 10% 20%;
   
-  --primary: 230 100% 65%;
+  --primary: 260 90% 65%; /* Vibrant Purple */
   --primary-foreground: 0 0% 100%;
   
-  --secondary: 240 10% 10%;
-  --secondary-foreground: 0 0% 98%;
+  --secondary: 240 10% 15%;
+  --secondary-foreground: 0 0% 100%;
   
-  --muted: 240 10% 10%;
-  --muted-foreground: 240 5% 65%;
+  --muted: 240 10% 15%;
+  --muted-foreground: 240 5% 60%;
   
-  --accent: 230 100% 65%;
+  --accent: 260 90% 65%;
   --accent-foreground: 0 0% 100%;
   
-  --destructive: 0 62.8% 30.6%;
+  --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
   
-  --input: 240 10% 12%;
-  --ring: 230 100% 65%;
+  --input: 240 10% 15%;
+  --ring: 260 90% 65%;
 
   --success: 142 71% 45%;
   --success-foreground: 0 0% 100%;
@@ -150,6 +150,22 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased bg-[#030303] text-foreground;
+    background: radial-gradient(circle at 50% 0%, #1a1033 0%, #030303 70%);
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)];
+  }
+  
+  .glass-button {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10 hover:bg-white/10 transition-all duration-300;
+  }
+  
+  .text-glow {
+    text-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
   }
 }

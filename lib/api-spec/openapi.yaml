@@ -48,6 +48,12 @@ paths:
             type: string
             enum: [known, unknown, all]
           description: Filter by word status
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: Maximum number of words to return
       responses:
         "200":
           description: List of words with user status
