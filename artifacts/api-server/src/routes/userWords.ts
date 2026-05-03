@@ -33,7 +33,7 @@ router.get("/swipe", requireAuth, async (req: AuthRequest, res) => {
       .select({
         id: wordsTable.id,
         word: wordsTable.word,
-        meaning: wordsTable.meaning_advanced,
+        meaning: wordsTable.meaning,
         partOfSpeech: wordsTable.partOfSpeech,
       })
       .from(wordsTable),
@@ -174,7 +174,7 @@ router.get("/daily-lesson", requireAuth, async (req: AuthRequest, res) => {
       .select({
         id: wordsTable.id,
         word: wordsTable.word,
-        meaning: wordsTable.meaning_advanced,
+        meaning: wordsTable.meaning,
         partOfSpeech: wordsTable.partOfSpeech,
       })
       .from(wordsTable),
