@@ -21,7 +21,7 @@ router.get("/words", async (req: AuthRequest, res) => {
     .select({
       id: wordsTable.id,
       word: wordsTable.word,
-      meaning: wordsTable.meaning_advanced,
+      meaning: wordsTable.meaning,
       partOfSpeech: wordsTable.partOfSpeech,
     })
     .from(wordsTable)
@@ -31,7 +31,7 @@ router.get("/words", async (req: AuthRequest, res) => {
     wordsQuery = wordsQuery.where(
       or(
         ilike(wordsTable.word, `%${query.search}%`),
-        ilike(wordsTable.meaning_advanced, `%${query.search}%`),
+        ilike(wordsTable.meaning, `%${query.search}%`),
       ),
     );
   }
@@ -78,7 +78,7 @@ router.get("/words/:id", async (req: AuthRequest, res) => {
     .select({
       id: wordsTable.id,
       word: wordsTable.word,
-      meaning: wordsTable.meaning_advanced,
+      meaning: wordsTable.meaning,
       partOfSpeech: wordsTable.partOfSpeech,
     })
     .from(wordsTable)
