@@ -5,8 +5,7 @@ import { z } from "zod/v4";
 export const wordsTable = pgTable("words", {
   id: serial("id").primaryKey(),
   word: text("word").notNull(),
-  meaning_simple: text("meaning_simple").notNull(),
-  meaning_advanced: text("meaning_advanced").notNull(),
+  meaning: text("meaning").notNull(),
   partOfSpeech: text("part_of_speech").notNull(),
 });
 
@@ -15,7 +14,7 @@ export const examplesTable = pgTable("examples", {
   wordId: integer("word_id")
     .notNull()
     .references(() => wordsTable.id, { onDelete: "cascade" }),
-  type: text("type").notNull(), // casual | professional
+  type: text("type").notNull(),
   sentence: text("sentence").notNull(),
 });
 
@@ -25,17 +24,22 @@ export const userWordStatusTable = pgTable("user_word_status", {
   wordId: integer("word_id")
     .notNull()
     .references(() => wordsTable.id, { onDelete: "cascade" }),
-  status: text("status").notNull(), // known | unknown
+  status: text("status").notNull(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const insertWordSchema = createInsertSchema(wordsTable).omit({ id: true });
 export const insertExampleSchema = createInsertSchema(examplesTable).omit({ id: true });
-export const insertUserWordStatusSchema = createInsertSchema(userWordStatusTable).omit({ id: true, updatedAt: true });
+export const insertUserWordStatusSchema = createInsertSchema(userWordStatusTable).omit({
+  id: true,
+  updatedAt: true,
+});
 
 export type InsertWord = z.infer<typeof insertWordSchema>;
 export type Word = typeof wordsTable.$inferSelect;
+
 export type InsertExample = z.infer<typeof insertExampleSchema>;
 export type Example = typeof examplesTable.$inferSelect;
+
 export type InsertUserWordStatus = z.infer<typeof insertUserWordStatusSchema>;
 export type UserWordStatus = typeof userWordStatusTable.$inferSelect;
